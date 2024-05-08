@@ -9,6 +9,7 @@ interface MintQAParams {
 
 export default function MintQA({ listing }: MintQAParams) {
   const id = listing.id
+  console.log('Q&A ID:', id)
 
   const queries = useGetQueries(id).data
   const isReFetching = useGetQueries(id).isRefetching

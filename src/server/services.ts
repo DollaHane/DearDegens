@@ -72,12 +72,12 @@ export function useGetNotifications() {
 }
 
 
-// export function useGetListing(mintId: any) {
-//   return useQuery<listingsType>({
-//     queryKey: ["listing"],
-//     queryFn: () => mintId && getListings(mintId),
-//   })
-// }
+export function useGetListing(listingId: any) {
+  return useQuery<listingsType[]>({
+    queryKey: ["listing"],
+    queryFn: () => listingId && getListings(listingId),
+  })
+}
 
 export function useGetChatrooms(mintId: any) {
   return useQuery<roomType[]>({

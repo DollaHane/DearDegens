@@ -1,3 +1,4 @@
+"use client"
 import React from "react"
 import MintCarousel from "@/src/components/pageMint/MintCarousel"
 import MintPageAuthorActions from "@/src/components/pageMint/MintPageAuthorActions"
@@ -26,65 +27,54 @@ import {
   dehydrate,
   HydrationBoundary,
   QueryClient,
-  QueryCache
+  QueryCache,
+  useQueryClient,
 } from "@tanstack/react-query"
 import { eq } from "drizzle-orm"
 import { getServerSession } from "next-auth"
 import ShareButtons from "@/src/components/pageMint/ShareButtons"
+import { useParams } from "next/navigation"
+import { useSession } from "next-auth/react"
+import { useGetListing } from "@/src/server/services"
 
-interface MintPageProps {
-  params: {
-    title: string
-    brand: string
-    model: string
-    subcategory: string
-    location: string
-    listingId: string
-  }
-}
-
-export default async function MintPage({ params }: MintPageProps) {
-  const param = params
-  const decodedParam = decodeURIComponent(param.listingId)
-  const session = await getServerSession(authOptions)
+export default function MintPage() {
+  const param = useParams()
+  const { listingId }: any = param
+  const { data: session } = useSession()
   const domain = process.env.URL!
 
   // LISTING QUERY
-  const queryClient = new QueryClient()
+  const queryClient = useQueryClient()
 
+  const adId = listingId.toString()
+  const userId = session?.user.id!
 
-  
-
-  const listing: listingsType[] =
-    (await db.select().from(listings).where(eq(listings.id, decodedParam))) ||
-    []
-
-  const query: queryType[] =
-    (await db.select().from(queries).where(eq(queries.adId, decodedParam))) ||
-    []
+  // LISTING QUERY
+  const listingData = useGetListing(adId).data || []
+  const listing = listingData[0]
 
   // OFFER QUERY
-  await queryClient.prefetchQuery({
+  queryClient.prefetchQuery({
     queryKey: ["adOffers"],
-    queryFn: () => listing && getAdOffers(listing[0].id),
+    queryFn: () => getAdOffers(listingId),
   })
 
   // USER QUERIES QUERY
-  await queryClient.prefetchQuery({
+  queryClient.prefetchQuery({
     queryKey: ["userOffers"],
-    queryFn: () => listing && getUserOffers(session?.user.id!, listing[0].id),
+    queryFn: () => getUserOffers(userId, listingId),
   })
 
   // QUERIES QUERY
-  await queryClient.prefetchQuery({
+  queryClient.prefetchQuery({
     queryKey: ["adQueries"],
-    queryFn: () => listing && getAdQueries(listing[0].id),
+    queryFn: () => getAdQueries(listingId),
   })
 
   // USER QUERIES QUERY
-  await queryClient.prefetchQuery({
+  queryClient.prefetchQuery({
     queryKey: ["userQueries"],
-    queryFn: () => listing && getUserQueries(session?.user.id!, listing[0].id),
+    queryFn: () => getUserQueries(userId, listingId),
   })
 
   // PRICE TEXT FORMATTER
@@ -100,77 +90,74 @@ export default async function MintPage({ params }: MintPageProps) {
   return (
     <div className="flex h-auto w-full">
       <HydrationBoundary state={dehydrate(queryClient)}>
-        <div className="mx-auto w-10/12 md:w-8/12">
-          {listing &&
-            listing.map((item, index) => (
-              <div key={index} className="mb-60">
-                {/* TOP SECTION */}
-                <div className="mt-10 flex w-full flex-row justify-between">
-                  <div className="my-auto w-full">
-                    <div className="flex w-full justify-between">
-                      <p className="mb-5 text-3xl font-bold text-customAccent">
-                        R {formatPrice(item.price)}
-                      </p>
-                      {session &&
-                        (item.price &&
-                        item.title &&
-                        item.authorId !== session.user.id ? (
-                          <MintOffer listing={item} />
-                        ) : item.isExpired ? (
-                          <MintRenew listing={item} />
-                        ) : item.isSold ? (
-                          <MintSoldRenew listing={item} />
-                        ) : (
-                          <MintSold listing={item} />
-                        ))}
-                    </div>
-                    <h1 className="mb-2 text-2xl font-bold">{item.title}</h1>
-                    <p className="text-xs italic text-secondary">
-                      Listed {formatTimeToNow(item.createdAt!)}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex flex-col py-5 md:flex-row">
-                  {/* @ts-expect-error Server Component */}
-                  <MintCarousel listing={item.images} />
-                  <MintInfo listing={item} />
-                </div>
-
-                {session && (
-                  <>
-                    {/* MANAGER SECTION */}
-                    <hr className="my-2 border border-t-muted-foreground" />
-                    <div className="flex min-h-[40px] items-end">
-                      <ShareButtons domain={domain} />
-                      {session?.user.id === item.authorId ? (
-                        <MintPageAuthorActions listing={item} />
-                      ) : (
-                        <MintPageUsersActions listing={item} />
-                      )}
-                    </div>
-                    {/* @ts-expect-error Server Component */}
-                    <MintList
-                      items={item.items}
-                      adId={item.id}
-                      sellerId={item.authorId}
-                    />
-                  </>
-                )}
-
-                {/* DESCRIPTION SECTION */}
-                <hr className="my-2 border border-t-muted-foreground" />
-                <h1 className="mt-5 text-lg font-bold">Description:</h1>
-                <p className="my-5 whitespace-pre-line pl-2 text-sm md:text-base">
-                  {item.description}
+      {listing && (
+        <div className="mb-60">
+          {/* TOP SECTION */}
+          <div className="mt-10 flex w-full flex-row justify-between">
+            <div className="my-auto w-full">
+              <div className="flex w-full justify-between">
+                <p className="mb-5 text-3xl font-bold text-customAccent">
+                  R {formatPrice(listing.price)}
                 </p>
-                <hr className="my-2 border border-t-muted-foreground" />
-
-                {/* QUERIES SECTION */}
-                <h1 className="mt-5 text-lg font-bold">Questions & Answers:</h1>
-                <MintQA listing={item} />
+                {session &&
+                  (listing.price &&
+                  listing.title &&
+                  listing.authorId !== session.user.id ? (
+                    <MintOffer listing={listing} />
+                  ) : listing.isExpired ? (
+                    <MintRenew listing={listing} />
+                  ) : listing.isSold ? (
+                    <MintSoldRenew listing={listing} />
+                  ) : (
+                    <MintSold listing={listing} />
+                  ))}
               </div>
-            ))}
+              <h1 className="mb-2 text-2xl font-bold">{listing.title}</h1>
+              <p className="text-xs italic text-secondary">
+                Listed {formatTimeToNow(listing.createdAt!)}
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col py-5 md:flex-row">
+            {/* @ts-expect-error Server Component */}
+            <MintCarousel listing={listing.images} />
+            <MintInfo listing={listing} />
+          </div>
+
+          {session && (
+            <>
+              {/* MANAGER SECTION */}
+              <hr className="my-2 border border-t-muted-foreground" />
+              <div className="flex min-h-[40px] items-end">
+                <ShareButtons domain={domain} />
+                {session?.user.id === listing.authorId ? (
+                  <MintPageAuthorActions listing={listing} />
+                ) : (
+                  <MintPageUsersActions listing={listing} />
+                )}
+              </div>
+              {/* @ts-expect-error Server Component */}
+              {/* <MintList
+               items={listing.items}
+               adId={listing.id}
+               sellerId={listing.authorId}
+             /> */}
+            </>
+          )}
+
+          {/* DESCRIPTION SECTION */}
+          <hr className="my-2 border border-t-muted-foreground" />
+          <h1 className="mt-5 text-lg font-bold">Description:</h1>
+          <p className="my-5 whitespace-pre-line pl-2 text-sm md:text-base">
+            {listing.description}
+          </p>
+          <hr className="my-2 border border-t-muted-foreground" />
+
+          {/* QUERIES SECTION */}
+          <h1 className="mt-5 text-lg font-bold">Questions & Answers:</h1>
+          <MintQA listing={listing} />
         </div>
+      )}
       </HydrationBoundary>
     </div>
   )
