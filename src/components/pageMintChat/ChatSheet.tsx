@@ -1,5 +1,6 @@
 "use client"
 import React, { useState, useEffect } from "react"
+import { io, Socket } from "socket.io-client"
 import { MessageCircle } from "lucide-react"
 import {
   Sheet,
@@ -23,9 +24,10 @@ interface ChatSheetProps {
 
 export default function ChatSheet({ listingId }: ChatSheetProps) {
   const [selectedRoom, setSelectedRoom] = useState<string>("")
+  const socket: Socket = io("http://localhost:8000")
   const { data: session } = useSession()
   const userId = session?.user.id
-
+  const userName = session?.user.name!
   const queryClient = useQueryClient()
   const messages = useGetMessages(selectedRoom).data as messagesType[]
   const { data, isFetching } = useGetChatrooms(listingId)
@@ -44,10 +46,14 @@ export default function ChatSheet({ listingId }: ChatSheetProps) {
     await queryClient.invalidateQueries({ queryKey: ["chatroom", listingId] })
   }
 
-  // MANAGE ROOM SELECT
-  const handleRoomChange = async (data: roomType) => {
-    setSelectedRoom(data.id)
-    await queryClient.invalidateQueries({ queryKey: ["messages", data.id] })
+  // JOIN ROOM
+  const joinRoom = (roomId: string) => {
+    setSelectedRoom(roomId)
+    
+    const room = {roomId, userName, userId}
+    if (room.roomId !== "") {
+      socket.emit("join_room", room)
+    }
   }
 
   // TOOLTIP
@@ -91,10 +97,11 @@ export default function ChatSheet({ listingId }: ChatSheetProps) {
                 <div className="flex flex-col space-y-1">
                   {chatRoomData.map((data: roomType, index) => {
                     return (
-                      <div onClick={() => handleRoomChange(data)} key={index}>
+                      <div onClick={() => joinRoom(data.id)} key={index}>
                         <ChatRoom
                           roomData={data}
                           messages={messages!}
+                          socket={socket}
                           key={data.id}
                         />
                       </div>

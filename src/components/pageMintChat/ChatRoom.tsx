@@ -1,5 +1,6 @@
 "use client"
 import React, { useState, useRef, useEffect } from "react"
+import { io, Socket } from "socket.io-client"
 import { roomType, messagesType, chatRoomType } from "@/src/types/db"
 import {
   Sheet,
@@ -34,6 +35,14 @@ import { cn } from "@/src/lib/utils"
 interface ChatRoomProps {
   roomData: roomType
   messages: messagesType[]
+  socket: Socket
+}
+
+type messageStateType = {
+  message: string
+  roomId: string
+  userId: string | undefined
+  userName: string | null | undefined
 }
 
 function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
@@ -48,10 +57,20 @@ function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
   )
 }
 
-export default function ChatRoom({ roomData, messages }: ChatRoomProps) {
+export default function ChatRoom({
+  roomData,
+  messages,
+  socket
+}: ChatRoomProps) {
   const queryClient = useQueryClient()
   const { data: session } = useSession()
+  const userId: string = session?.user.id!
+  
   const [disabled, setDisabled] = useState<boolean>(false)
+  const [messagesRecieved, setMessagesReceived] = useState<any[]>([])
+  useEffect(() => {
+    // setMessagesReceived()
+  }, [roomData.id, messages])
 
   // SET TRIGGER USER DETAILS
   const userName = () => {
@@ -74,6 +93,8 @@ export default function ChatRoom({ roomData, messages }: ChatRoomProps) {
     }
   }
 
+
+
   // TANSTACK FORM
   const form = useForm({
     validatorAdapter: zodValidator,
@@ -91,14 +112,44 @@ export default function ChatRoom({ roomData, messages }: ChatRoomProps) {
         userName: session?.user.name || "",
       }
       console.log("Payload:", payload)
-      sendChatMessage(payload)
-      setDisabled(true)
+      sendSocketMessage(payload)
+      // sendTanstackMessage(payload)
+      // setDisabled(true)
     },
   })
 
+  // SEND SOCKET MESSAGE
+  const sendSocketMessage = ({ userName, roomId, message }: any) => {
+    const createdAt: Date = new Date()
+    socket.emit("send_message", { userName, userId, roomId, message, createdAt })
+    form.reset()
+  }
+
+  // RECIEVE SOCKET MESSAGES
+  useEffect(() => {
+    console.log('recieved message', )
+    socket.on("receive_message", (data: any) => {
+      console.log('data recieved', data)
+      setMessagesReceived((state) => [
+        ...state,
+        {
+          roomId: data.roomId,
+          message: data.message,
+          userName: data.userName,
+          userId: data.userId,
+          createdAt: data.createdAt,
+        },
+      ])
+    })
+
+    return () => {
+      socket.off("receive_message")
+    }
+  }, [socket])
+
   // NEW MESSAGE MUTATION
   const {
-    mutate: sendChatMessage,
+    mutate: sendTanstackMessage,
     variables,
     isPending,
   } = useMutation({
@@ -132,16 +183,16 @@ export default function ChatRoom({ roomData, messages }: ChatRoomProps) {
       if (error) {
         console.log("onSettled error:", error)
       } else {
-        await queryClient.invalidateQueries({
-          queryKey: ["messages", roomData.id],
-        })
+        // await queryClient.invalidateQueries({
+        //   queryKey: ["messages", roomData.id],
+        // })
       }
     },
   })
 
   return (
     <Sheet>
-      <SheetTrigger>
+      <SheetTrigger >
         <div className="h-full w-full">{userName()}</div>
       </SheetTrigger>
       <SheetContent>
@@ -153,7 +204,7 @@ export default function ChatRoom({ roomData, messages }: ChatRoomProps) {
         <div className="relative z-30 flex h-[75vh] w-full flex-col justify-end overflow-hidden md:h-[85vh]">
           <div className="absolute top-0 mb-5 flex h-[50vh] w-full overflow-hidden rounded-md md:h-[65vh]">
             <ScrollArea className="flex w-full bg-background pr-5">
-              {isPending && (
+              {/* {isPending && (
                 <div
                   className="mt-3 flex flex-col justify-center rounded-md bg-background p-2"
                   key={variables.roomId}
@@ -170,9 +221,9 @@ export default function ChatRoom({ roomData, messages }: ChatRoomProps) {
                     Pending
                   </span>
                 </div>
-              )}
-              {messages &&
-                messages.map((msg: messagesType) => (
+              )} */}
+              {messagesRecieved &&
+                messagesRecieved.map((msg: messagesType) => (
                   <>
                     {msg.roomId === roomData.id && (
                       <div
