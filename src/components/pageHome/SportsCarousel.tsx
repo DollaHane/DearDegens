@@ -59,7 +59,7 @@ export default function SportsCarousel() {
               <CarouselItem
                 key={index}
                 tabIndex={index}
-                className="flex basis-auto flex-row p-5"
+                className="flex basis-auto flex-row"
               >
                 <CarouselMintCardComponent listing={listing} />
               </CarouselItem>
@@ -69,12 +69,12 @@ export default function SportsCarousel() {
               <CarouselItem
                 key={item}
                 tabIndex={index}
-                className="flex basis-auto flex-row p-5"
+                className="flex basis-auto flex-row"
               >
                 <CarouselMintCardSkeleton />
               </CarouselItem>
             ))}
-          <CarouselItem className="basis-auto p-5">
+          <CarouselItem className="basis-auto">
             <Button
               onClick={() => fetchNextPage()}
               className="h-60 w-40  rounded-lg border border-muted bg-background shadow-md transition duration-75 hover:scale-[0.99] hover:bg-background"

@@ -46,10 +46,19 @@ export default function ChatSheet({ listingId }: ChatSheetProps) {
     await queryClient.invalidateQueries({ queryKey: ["chatroom", listingId] })
   }
 
+  // INVALIDATE LISTING CHAT
+  const handleInvalidateMessages = async (roomId: string) => {
+    await queryClient.invalidateQueries({ queryKey: ["messages", roomId] })
+  }
+
+  useEffect(() => {
+    handleInvalidateMessages(selectedRoom)
+  }, [selectedRoom]);
+
   // JOIN ROOM
   const joinRoom = (roomId: string) => {
     setSelectedRoom(roomId)
-    
+    // handleInvalidateMessages(roomId)
     const room = {roomId, userName, userId}
     if (room.roomId !== "") {
       socket.emit("join_room", room)

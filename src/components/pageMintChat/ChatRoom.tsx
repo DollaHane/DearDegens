@@ -68,8 +68,9 @@ export default function ChatRoom({
   
   const [disabled, setDisabled] = useState<boolean>(false)
   const [messagesRecieved, setMessagesReceived] = useState<any[]>([])
+  
   useEffect(() => {
-    // setMessagesReceived()
+    setMessagesReceived(messages)
   }, [roomData.id, messages])
 
   // SET TRIGGER USER DETAILS
@@ -93,8 +94,6 @@ export default function ChatRoom({
     }
   }
 
-
-
   // TANSTACK FORM
   const form = useForm({
     validatorAdapter: zodValidator,
@@ -113,8 +112,6 @@ export default function ChatRoom({
       }
       console.log("Payload:", payload)
       sendSocketMessage(payload)
-      // sendTanstackMessage(payload)
-      // setDisabled(true)
     },
   })
 
@@ -127,11 +124,8 @@ export default function ChatRoom({
 
   // RECIEVE SOCKET MESSAGES
   useEffect(() => {
-    console.log('recieved message', )
     socket.on("receive_message", (data: any) => {
-      console.log('data recieved', data)
       setMessagesReceived((state) => [
-        ...state,
         {
           roomId: data.roomId,
           message: data.message,
@@ -139,6 +133,7 @@ export default function ChatRoom({
           userId: data.userId,
           createdAt: data.createdAt,
         },
+        ...state,
       ])
     })
 
@@ -147,48 +142,6 @@ export default function ChatRoom({
     }
   }, [socket])
 
-  // NEW MESSAGE MUTATION
-  const {
-    mutate: sendTanstackMessage,
-    variables,
-    isPending,
-  } = useMutation({
-    mutationFn: async ({
-      message,
-      roomId,
-      userId,
-      userName,
-    }: ChatMessageCreationRequest) => {
-      const payload: ChatMessageCreationRequest = {
-        message,
-        roomId,
-        userId,
-        userName,
-      }
-      await axios.post("/api/createChatMessage", payload)
-    },
-    onError: (error) => {
-      console.log("error:", error)
-      return toast({
-        title: "Something went wrong.",
-        description: "Error sending message. Please try again.",
-        variant: "destructive",
-      })
-    },
-    onSuccess: () => {
-      form.reset()
-    },
-    onSettled: async (_, error) => {
-      setDisabled(false)
-      if (error) {
-        console.log("onSettled error:", error)
-      } else {
-        // await queryClient.invalidateQueries({
-        //   queryKey: ["messages", roomData.id],
-        // })
-      }
-    },
-  })
 
   return (
     <Sheet>
