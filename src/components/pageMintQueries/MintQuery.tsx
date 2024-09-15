@@ -196,9 +196,9 @@ export default function MintQuery({ listing }: MintQueryProps) {
           ) : (
             <p
               className={cn(
-                "absolute -top-12 flex h-10 w-[100px] items-center justify-center rounded-md border border-muted bg-background p-1 text-center text-xs text-primary opacity-0 shadow-md",
+                "absolute -top-12 hidden h-10 w-[100px] items-center justify-center rounded-md border border-muted bg-background p-1 text-center text-xs text-primary opacity-0 shadow-md",
                 tooltipVisible &&
-                  "opacity-100 transition-opacity duration-200 ease-in"
+                  "opacity-100 flex transition-opacity duration-200 ease-in"
               )}
             >
               Request More Information

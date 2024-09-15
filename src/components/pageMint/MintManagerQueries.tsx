@@ -40,16 +40,16 @@ export default function MintManageQueries({
       >
         <p
           className={cn(
-            "absolute -top-12 flex h-10 w-[75px] items-center justify-center rounded-md border border-muted bg-background p-1 text-center text-xs text-primary opacity-0 shadow-md",
+            "absolute -top-12 hidden h-10 w-[75px] items-center justify-center rounded-md border border-muted bg-background p-1 text-center text-xs text-primary opacity-0 shadow-md",
             tooltipVisible &&
-              "opacity-100 transition-opacity duration-200 ease-in"
+              "opacity-100 flex transition-opacity duration-200 ease-in"
           )}
         >
           Manage Queries
         </p>
         <FileQuestion className="h-6 w-10" />
       </SheetTrigger>
-      <SheetContent className="p-0">
+      <SheetContent className="p-0 backdrop-blur-xl bg-transparent">
         <SheetHeader className="h-full">
           <SheetTitle className="mx-auto mt-5 w-11/12 text-customAccent">
             Queries:

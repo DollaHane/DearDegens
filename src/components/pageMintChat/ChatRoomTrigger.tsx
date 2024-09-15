@@ -15,7 +15,7 @@ export default function ChatRoomTrigger({
   userImage,
 }: ChatRoomTriggerProps) {
   return (
-    <div className="group flex flex-row items-center space-x-5 rounded-lg border-2 border-transparent p-2 text-primary hover:border-customAccent">
+    <div className="group flex w-full flex-row bg-background items-center space-x-5 rounded-lg border border-muted p-2 text-primary shadow-md transition duration-75 hover:scale-[0.99]">
       <UserAvatar
         user={{
           name: userName,

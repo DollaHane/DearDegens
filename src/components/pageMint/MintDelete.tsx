@@ -70,9 +70,9 @@ export default function MintDelete(listingId: any) {
         >
           <p
             className={cn(
-              "absolute -top-10 flex h-8 w-[75px] items-center justify-center rounded-md border border-muted bg-background p-1 text-center text-xs text-primary opacity-0 shadow-md",
+              "absolute -top-10 hidden h-8 w-[75px] items-center justify-center rounded-md border border-muted bg-background p-1 text-center text-xs text-primary opacity-0 shadow-md",
               tooltipVisible &&
-                "opacity-100 transition-opacity duration-200 ease-in"
+                "flex opacity-100 transition-opacity duration-200 ease-in"
             )}
           >
             Delete Ad

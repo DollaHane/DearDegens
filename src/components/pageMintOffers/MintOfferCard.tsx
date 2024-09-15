@@ -25,7 +25,7 @@ export default function MintOfferCard({ adOffer }: MintOfferCardProps) {
   const redPrice = askPrice && askPrice * 0.5
 
   return (
-    <div className="mx-auto mb-3 flex w-11/12 flex-col justify-between rounded-lg border border-muted p-2 text-primary shadow-lg transition duration-75 hover:scale-[0.99] hover:border-customAccent">
+    <div className="mx-auto mb-3 flex w-11/12 flex-col justify-between rounded-2xl border border-muted p-2 text-primary shadow-lg transition duration-75 hover:scale-[0.99]">
       {adOffer.itemName && (
         <div className="mb-1 flex w-full gap-1">
           <p className="text-sm font-semibold">Item: {adOffer.itemName}</p>

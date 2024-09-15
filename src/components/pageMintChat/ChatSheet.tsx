@@ -23,11 +23,18 @@ interface ChatSheetProps {
 }
 
 export default function ChatSheet({ listingId }: ChatSheetProps) {
+  // SOCKET
+  const [isConnected, setIsConnected] = useState<boolean>(false)
+  const [transport, setTransport] = useState("N/A")
   const [selectedRoom, setSelectedRoom] = useState<string>("")
   const socket: Socket = io("http://localhost:8000")
   const { data: session } = useSession()
   const userId = session?.user.id
   const userName = session?.user.name!
+
+  console.log('selectedRoom', selectedRoom)
+
+  // TANSTACK QUERY
   const queryClient = useQueryClient()
   const messages = useGetMessages(selectedRoom).data as messagesType[]
   const { data, isFetching } = useGetChatrooms(listingId)
@@ -53,13 +60,42 @@ export default function ChatSheet({ listingId }: ChatSheetProps) {
 
   useEffect(() => {
     handleInvalidateMessages(selectedRoom)
-  }, [selectedRoom]);
+  }, [selectedRoom])
+
+  // SOCKET CONNECTION
+  useEffect(() => {
+    if (socket.connected) {
+      onConnect()
+    }
+
+    function onConnect() {
+      setIsConnected(true)
+      setTransport(socket.io.engine.transport.name)
+
+      socket.io.engine.on("upgrade", (transport) => {
+        setTransport(transport.name)
+      })
+    }
+
+    function onDisconnect() {
+      setIsConnected(false)
+      setTransport("N/A")
+    }
+
+    socket.on("connect", onConnect)
+    socket.on("disconnect", onDisconnect)
+
+    return () => {
+      socket.off("connect", onConnect)
+      socket.off("disconnect", onDisconnect)
+    }
+  }, [])
 
   // JOIN ROOM
   const joinRoom = (roomId: string) => {
     setSelectedRoom(roomId)
     // handleInvalidateMessages(roomId)
-    const room = {roomId, userName, userId}
+    const room = { roomId, userName, userId }
     if (room.roomId !== "") {
       socket.emit("join_room", room)
     }
@@ -84,29 +120,37 @@ export default function ChatSheet({ listingId }: ChatSheetProps) {
       >
         <p
           className={cn(
-            "absolute -top-10 flex h-8 w-[85px] items-center justify-center rounded-md border border-muted bg-background p-1 text-center text-xs text-primary opacity-0 shadow-md",
+            "absolute -top-10 h-8 w-[85px] hidden items-center justify-center rounded-md border border-muted bg-background p-1 text-center text-xs text-primary opacity-0 shadow-md",
             tooltipVisible &&
-              "opacity-100 transition-opacity duration-200 ease-in"
+              "opacity-100 flex transition-opacity duration-200 ease-in"
           )}
         >
           Chat Room
         </p>
         <MessageCircle />
       </SheetTrigger>
-      <SheetContent>
+      <SheetContent className="backdrop-blur-xl bg-transparent">
         <SheetHeader className="h-full">
           <SheetTitle className="text-customAccent">Chat Rooms</SheetTitle>
+          <div className="flex items-center justify-end gap-2">
+            <p className="text-xs">Connection Status:</p>
+            {isConnected ? (
+              <div className="w-3 h-3 rounded-full shadow-md bg-green-500"/>
+            ):(
+              <div className="w-3 h-3 rounded-full shadow-md bg-red-500"/>
+            )}
+          </div>
           {isFetching === true ? (
-            <div>
+            <div className="pt-3">
               <ChatRoomSkeleton />
             </div>
           ) : (
-            <div className="h-full">
+            <div className="h-full pt-3">
               {chatRoomData && chatRoomData.length > 0 ? (
                 <div className="flex flex-col space-y-1">
                   {chatRoomData.map((data: roomType, index) => {
                     return (
-                      <div onClick={() => joinRoom(data.id)} key={index}>
+                      <div onClick={() => joinRoom(data.id)} key={index} className="w-full">
                         <ChatRoom
                           roomData={data}
                           messages={messages!}

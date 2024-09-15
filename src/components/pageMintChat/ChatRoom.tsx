@@ -145,42 +145,24 @@ export default function ChatRoom({
 
   return (
     <Sheet>
-      <SheetTrigger >
+      <SheetTrigger className="w-full">
         <div className="h-full w-full">{userName()}</div>
       </SheetTrigger>
-      <SheetContent>
-        <SheetHeader className="z-40 mr-10 h-16 w-[315px] bg-background pt-5 text-lg font-bold text-customAccent">
+      <SheetContent className="backdrop-blur-xl bg-transparent">
+        <SheetHeader className="z-40 mr-10 h-16 w-full bg-transparent pt-5 text-lg font-bold text-customAccent">
           <h1>Messages</h1>
           <div className="my-3 h-[1px] w-full bg-customAccent" />
         </SheetHeader>
 
-        <div className="relative z-30 flex h-[75vh] w-full flex-col justify-end overflow-hidden md:h-[85vh]">
-          <div className="absolute top-0 mb-5 flex h-[50vh] w-full overflow-hidden rounded-md md:h-[65vh]">
-            <ScrollArea className="flex w-full bg-background pr-5">
-              {/* {isPending && (
-                <div
-                  className="mt-3 flex flex-col justify-center rounded-md bg-background p-2"
-                  key={variables.roomId}
-                >
-                  <div className="flex justify-between">
-                    <span className="flex w-full justify-end text-right text-xs font-bold italic text-customAccent">
-                      {session?.user.name}
-                    </span>
-                  </div>
-                  <p className="p-1 text-right text-sm text-primary">
-                    {variables.message}
-                  </p>
-                  <span className="flex w-full justify-end text-xs italic text-muted-foreground">
-                    Pending
-                  </span>
-                </div>
-              )} */}
+        <div className="relative z-30 flex h-full w-full flex-col overflow-hidden">
+          <div className="mb-5 flex w-full h-[60vh] overflow-hidden rounded-md">
+            <ScrollArea className="flex w-full pr-5">
               {messagesRecieved &&
                 messagesRecieved.map((msg: messagesType) => (
-                  <>
+                  <div className="p-2">
                     {msg.roomId === roomData.id && (
                       <div
-                        className="mt-3 flex flex-col rounded-md bg-background p-2"
+                        className="mt-3 flex flex-col rounded-2xl border border-muted shadow-md bg-background p-3"
                         key={msg.id}
                       >
                         <span
@@ -203,7 +185,7 @@ export default function ChatRoom({
                         </p>
                         <span
                           className={cn(
-                            "flex w-full pl-1 text-left text-[10px] italic text-muted-foreground",
+                            "flex pl-1 text-left text-[10px] italic text-muted-foreground",
                             session?.user.id === msg.userId &&
                               "justify-end text-right"
                           )}
@@ -212,9 +194,9 @@ export default function ChatRoom({
                         </span>
                       </div>
                     )}
-                  </>
+                  </div>
                 ))}
-              <div className="mt-3 flex flex-col justify-center rounded-md bg-background p-2">
+              <div className="mt-3 flex flex-col justify-center rounded-2xl p-2 bg-background">
                 <div className="flex justify-between">
                   <span className="flex w-full justify-start text-left text-xs font-bold italic text-primary">
                     DearDegens Admin
@@ -231,7 +213,7 @@ export default function ChatRoom({
                 </span>
               </div>
               <div className="my-3 h-[1px] w-full bg-customAccent" />
-              <p className="w-full text-end text-xs italic text-muted-foreground">
+              <p className="w-full text-end pr-2 text-xs italic text-muted-foreground">
                 Chatroom opened: {formatDateFromTimestamp(roomData.createdAt!)}
               </p>
             </ScrollArea>
@@ -246,7 +228,7 @@ export default function ChatRoom({
                 void form.handleSubmit()
               }}
             >
-              <div className="z-50 flex h-full w-full flex-col justify-end overflow-visible pr-5">
+              <div className="z-50 flex h-full w-full flex-col overflow-visible pr-5">
                 <form.Field
                   name="message"
                   validators={{
